@@ -288,8 +288,8 @@ function parseDataAndReturnListItem(data) {
       for (let i = 0; i < data.template.actions.length; i++) {
         let action = data.template.actions[i];
         if (action.type == "postback") {
-          if (action.text) {
-            reply += `<div class="chat-template-buttons-button" onclick="{sendPostback('${action.data}');sendTextMessage('${action.text}');}">${action.label}</div>`;
+          if (action.displayText) {
+            reply += `<div class="chat-template-buttons-button" onclick="{sendPostback('${action.data}');sendTextMessage('${action.label}');}">${action.label}</div>`;
           }
           else {
             reply += `<div class="chat-template-buttons-button" onclick="{sendTextMessage('${action.data}');}">${action.label}</div>`;
@@ -347,8 +347,8 @@ function parseDataAndReturnListItem(data) {
         for (let j = 0; j < column.actions.length; j++) {
           let action = column.actions[j];
           if (action.type == "postback") {
-            if (action.text) {
-              reply += `<div class="chat-template-buttons-button" onclick="{sendPostback('${action.data}');sendTextMessage('${action.text}');}">${action.label}</div>`;
+            if (action.displayText) {
+              reply += `<div class="chat-template-buttons-button" onclick="{sendPostback('${action.data}');sendTextMessage('${action.label}');}">${action.label}</div>`;
             }
             else {
               reply += `<div class="chat-template-buttons-button" onclick="{sendTextMessage('${action.data}');}">${action.label}</div>`;
@@ -384,8 +384,8 @@ function parseDataAndReturnListItem(data) {
         reply += '<div class="chat-template-image-carousel-button">';
         let action = column.action;
         if (action.type == "postback") {
-          if (action.text) {
-            reply += `<div class="chat-template-image-carousel-button-content" onclick="{sendPostback('${action.data}');sendTextMessage('${action.text}');}">${action.label}</div>`;
+          if (action.displayText) {
+            reply += `<div class="chat-template-image-carousel-button-content" onclick="{sendPostback('${action.data}');sendTextMessage('${action.label}');}">${action.label}</div>`;
           }
           else {
             reply += `<div class="chat-template-image-carousel-button-content" onclick="{sendTextMessage('${action.data}');}">${action.label}</div>`;
@@ -1358,8 +1358,8 @@ function toggleRichMenu() {
               imgDiv += `<area shape="rect" coords="${area.bounds.x * scale},${area.bounds.y * scale},${area.bounds.width * scale + area.bounds.x * scale},${area.bounds.height * scale + area.bounds.y * scale}" href="javascript:sendTextMessage('${area.action.text}');">`;
             }
             else if (area.action.type === "postback") {
-              if(area.action.text){
-                imgDiv += `<area shape="rect" coords="${area.bounds.x * scale},${area.bounds.y * scale},${area.bounds.width * scale + area.bounds.x * scale},${area.bounds.height * scale + area.bounds.y * scale}" href="javascript:sendPostback('${area.action.data}');sendTextMessage('${area.action.text}');">`;
+              if(area.action.displayText){
+                imgDiv += `<area shape="rect" coords="${area.bounds.x * scale},${area.bounds.y * scale},${area.bounds.width * scale + area.bounds.x * scale},${area.bounds.height * scale + area.bounds.y * scale}" href="javascript:sendPostback('${area.action.data}');sendTextMessage('${area.action.label}');">`;
               }
               else{
                 imgDiv += `<area shape="rect" coords="${area.bounds.x * scale},${area.bounds.y * scale},${area.bounds.width * scale + area.bounds.x * scale},${area.bounds.height * scale + area.bounds.y * scale}" href="javascript:sendPostback('${area.action.data}');">`;
