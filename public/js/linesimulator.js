@@ -6,10 +6,7 @@
     let channelToken = localStorage.getItem('channelToken');
     let botAPIAddress = localStorage.getItem('botAPIAddress');
     $("#userId")[0].value = userId;
-    $("#channelSecret")[0].value = channelSecret;
-    $("#channelToken")[0].value = channelToken;
-    $("#botAPIAddress")[0].value = botAPIAddress;
-    if (!userId || !channelToken || !channelToken || !botAPIAddress) {
+    if (!userId) {
       // Do nothing. Let settings pane open.
     }
     else {
@@ -120,28 +117,16 @@ var userId = "";
 function setSettings() {
   console.log("setSettings");
   let userIdInput = $("#userId")[0];
-  let channelSecretInput = $('#channelSecret')[0];
-  let channelTokenInput = $('#channelToken')[0];
-  let botAPIAddressInput = $('#botAPIAddress')[0];
-  if (!userIdInput.value || !channelSecretInput.value || !channelTokenInput.value || !botAPIAddressInput.value) {
+  if (!userIdInput.value) {
     $('.warning')[0].innerText = "Please set values";
   }
   else {
     userId = userIdInput.value;
-    channelSecret = channelSecretInput.value;
-    channelToken = channelTokenInput.value;
-    botAPIAddress = botAPIAddressInput.value;
     localStorage.setItem("userId", userId);
-    localStorage.setItem("channelSecret", channelSecret);
-    localStorage.setItem("channelToken", channelToken);
-    localStorage.setItem("botAPIAddress", botAPIAddress);
     $.ajax({
       url: "/channelSettings",
       type: "POST",
       data: {
-        "botAPIAddress": botAPIAddress,
-        "channelSecret": channelSecret,
-        "channelToken": channelToken,
         "userId": userId
       },
       success: function (data) {

@@ -9,10 +9,12 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var crypto = require('crypto');
-var botAPIAddress;
-var channelSecret;
-var channelToken;
+var botAPIAddress = process.env.BOT_API_ADDRESS
+var channelSecret = process.env.LINEAPI_CHANNEL_SECRET
 var userRichMenuId = null
+
+console.log(botAPIAddress);
+console.log(channelSecret);
 
 // Specifie body parsers
 app.use(bodyParser.json({ limit: '50mb' }));
@@ -30,9 +32,6 @@ const lineAPIUrl = "https://api.line.me/v2/";
 
 // Set channelSettings.
 app.post('/channelSettings', function (req, res) {
-    botAPIAddress = req.body.botAPIAddress;
-    channelSecret = req.body.channelSecret;
-    channelToken = req.body.channelToken;
     res.send({});
 });
 
