@@ -118,7 +118,7 @@
 
 var userId = "";
 function setSettings() {
-  pocMode = false;
+  console.log("setSettings");
   let userIdInput = $("#userId")[0];
   let channelSecretInput = $('#channelSecret')[0];
   let channelTokenInput = $('#channelToken')[0];
@@ -146,7 +146,7 @@ function setSettings() {
       },
       success: function (data) {
         $('.warning')[0].innerText = "";
-        setPocMode(false);
+        toggleSettings();
       },
       error: function (xhr, ajaxOptions, thrownError) {
         $('.warning')[0].innerText = `Error : ${JSON.parse(xhr.responseText).message}`;
@@ -154,29 +154,6 @@ function setSettings() {
     });
   }
 }
-
-var pocMode;
-function setPocMode(mode) {
-  pocMode = mode;
-  if (pocMode && $('.bot-chat').hasClass('hide')) {
-    $('.bot-chat').removeClass('hide');
-  }
-  else if (!pocMode && !$('.bot-chat').hasClass('hide')) {
-    $('.bot-chat').addClass('hide');
-  }
-  $.ajax({
-    url: "/pocMode",
-    type: "POST",
-    data: {
-      "pocMode": pocMode
-    },
-    success: function (data) {
-      $('.warning')[0].innerText = "";
-      toggleSettings();
-    }
-  });
-}
-//#endregion
 
 // Handle Chat Item select event.
 function onSelectChatItem(obj) {
@@ -548,16 +525,14 @@ function sendFromChatBox() {
 }
 // send data to Bot API.
 function send(sendObject) {
-  // if POC mode, then do not send to bot.
-  if (pocMode) {
-    return;
-  }
+  console.log(sendObject);
   $.ajax({
     url: "/send",
     contentType: "application/json",
     type: "POST",
     data: JSON.stringify({ "events": [sendObject] }),
     success: function () {
+      console.log('success');
     },
     error: function (xhr, ajaxOptions, thrownError) {
     }

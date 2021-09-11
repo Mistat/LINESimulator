@@ -4,6 +4,7 @@ var path = require('path');
 var bodyParser = require("body-parser");
 var fs = require('fs');
 var request = require('request');
+var faker = require('faker');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
@@ -11,8 +12,7 @@ var crypto = require('crypto');
 var botAPIAddress;
 var channelSecret;
 var channelToken;
-var pocMode;
-var richMenuId;
+var userRichMenuId = null
 
 // Specifie body parsers
 app.use(bodyParser.json({ limit: '50mb' }));
@@ -26,36 +26,19 @@ app.use(express.static(__dirname + '/public'))
 app.get('/', function (req, res) {
     res.sendFile(__dirname + "/simulator.html");
 });
+const lineAPIUrl = "https://api.line.me/v2/";
 
 // Set channelSettings.
 app.post('/channelSettings', function (req, res) {
     botAPIAddress = req.body.botAPIAddress;
     channelSecret = req.body.channelSecret;
     channelToken = req.body.channelToken;
-    request({
-        headers: { "Authorization": "Bearer " + channelToken },
-        uri: `${lineAPIUrl}bot/profile/${req.body.userId}`,
-        method: "GET"
-    },
-        function (error, response, body) {
-            if (body.indexOf("userId") == -1) {
-                res.status(response.statusCode).send(body);
-            }
-            else {
-                return res.send(body);
-            }
-        }
-    );
-});
-
-// Set pocMode.
-app.post('/pocMode', function (req, res) {
-    pocMode = req.body.pocMode;
-    return res.sendStatus(200);
+    res.send({});
 });
 
 // Receive file from client and send appropriate event to API.
 app.post('/upload', function (req, res) {
+    console.log(`${req.method} ${req.url}`);
     // Generate contentId by using time and copy the file into upload folder.
     var contentId = Date.now().toString();
     if (!fs.existsSync(path.join(__dirname, 'public', 'temp'))) {
@@ -75,7 +58,8 @@ app.post('/upload', function (req, res) {
         fs.copyFileSync(req.body.filename,
             fileFullPath);
     }
-    var fileext = filename.split('.')[1];
+    var fileext = filename.split('.')[1].toLowerCase();
+    console.log(`fileext: ${fileext}`);
     var type = "file"
     if (fileext === "mp4") {
         type = "video";
@@ -100,34 +84,36 @@ app.post('/upload', function (req, res) {
         }
     };
 
-    if (pocMode === "false") {
-        var jsonData = JSON.stringify({ "events": [sendObject] });
-        var signature = crypto.createHmac("SHA256", channelSecret)
-            .update(jsonData)
-            .digest().toString('base64');
-
-        // Send request.
-        request({
-            headers: {
-                "X-Line-Signature": signature,
-                "Content-Type": "application/json"
-            },
-            uri: botAPIAddress,
-            body: jsonData,
-            method: 'POST'
+    var jsonData = JSON.stringify({ "events": [sendObject] });
+    var signature = crypto.createHmac("SHA256", channelSecret)
+        .update(jsonData)
+        .digest().toString('base64');
+    console.log(jsonData);
+    // Send request.
+    request({
+        headers: {
+            "X-Line-Signature": signature,
+            "Content-Type": "application/json"
         },
-            function (error, response, body) {
-                // handle result if necessary.
-            }
-        );
-    }
+        uri: botAPIAddress,
+        body: jsonData,
+        method: 'POST'
+    },
+        function (error, response, body) {
+            // handle result if necessary.
+        }
+    );
+
     res.send({ "filePath": filePath, "sendObject": sendObject });
 });
 
 /* send request to your bot application */
 app.post('/send', function (req, res) {
+    console.log('send');
     var jsonData = JSON.stringify(req.body);
     // Generate hash based on https://developers.line.me/en/docs/messaging-api/reference/#signature-validation
+    console.log(channelSecret)
+    console.log(jsonData)
     var signature = crypto.createHmac("SHA256", channelSecret)
         .update(jsonData)
         .digest().toString('base64');
@@ -148,102 +134,89 @@ app.post('/send', function (req, res) {
     );
 });
 
-/* Get Rich menu for user */
-app.get('/richmenu/:userId/:richMenuId', function (req, res) {
-    // Generate hash based on https://developers.line.me/en/docs/messaging-api/reference/#signature-validation
-    let url = `bot/user/${req.params.userId}/richmenu`;
-    richMenuId = req.params.richMenuId;
-    request({
-        headers: { 'Authorization': `Bearer ${channelToken}` },
-        uri: `${lineAPIUrl}${url}`,
-        method: "GET"
-    }, function (error, response, body) {
-        if (JSON.parse(response.body).message === "the user has no richmenu") {
-            res.send({ "message": "no menu" });
-        }
-        // If rich menuId is same as passed one, do nothing.
-        else if (JSON.parse(response.body).richMenuId == richMenuId) {
-            res.send(null);
-        }
-        // otherwise get the richmenu.
-        else {
-            richMenuId = JSON.parse(response.body).richMenuId;
-            url = `bot/richmenu/${richMenuId}/content`;
-            request({
-                headers: { 'Authorization': `Bearer ${channelToken}` },
-                encoding: null,
-                uri: `${lineAPIUrl}${url}`,
-                method: "GET"
 
-            }, function (error, response, body) {
-                var image = body;
-                url = `bot/richmenu/${richMenuId}`;
-                request({
-                    headers: { 'Authorization': `Bearer ${channelToken}` },
-                    uri: `${lineAPIUrl}${url}`,
-                    method: "GET"
-                }, function (error, response, body) {
-                    res.send({ "richMenu": JSON.parse(body), "image": image });
-                });
-            });
-        }
+// ユーザーのリッチメニューのIDを取得する
+// https://developers.line.biz/ja/reference/messaging-api/#get-rich-menu-id-of-user
+app.get('/bot/user/:userId/richmenu', (req, res)=>{
+    console.log(`Richmenu :${req.params.userId} ${userRichMenuId}`);
+    res.send(
+        userRichMenuId ? {"richMenuId":userRichMenuId} : {})
+});
+
+// リッチメニューとユーザーをリンクする
+// https://developers.line.biz/ja/reference/messaging-api/#link-rich-menu-to-user
+app.post('/bot/user/:userId/richmenu/:richMenuId', (req, res) => {
+    userRichMenuId = req.params.richMenuId;
+    console.log(`Link:${req.params.userId} ${req.params.richMenuId}`);
+    res.send({})
+});
+
+// リッチメニューとユーザーのリンクを解除する
+// https://developers.line.biz/ja/reference/messaging-api/#unlink-rich-menu-from-user
+app.delete('/bot/user/:userId/richmenu', (req, res) => {
+    userRichMenuId = null;
+    console.log(`Unlink:${req.params.userId}`);
+    res.send({})
+});
+
+app.get('/bot/user/:userId/richmenu', (req, res) => {
+    console.log(`Unlink:${req.params.userId} ${userRichMenuId}`);
+    res.send({"richMenuId":userRichMenuId})
+});
+
+// 友だち数を取得する
+// https://developers.line.biz/ja/reference/messaging-api/#get-number-of-followers
+app.get('/bot/insight/followers', (req, res) => {
+    res.send({
+        status: 'ready',
+        followers: 32524,
+        targetedReaches: 19935,
+        blocks: 12179
+    })
+});
+
+// 当月のメッセージ利用状況を取得する
+// https://developers.line.biz/ja/reference/messaging-api/#get-consumption
+app.get('/bot/message/quota/consumption', (req, res) => {
+    res.send( { totalUsage: 90904 })
+});
+
+// 追加メッセージ数の上限目安を取得する
+// https://developers.line.biz/ja/reference/messaging-api/#get-quota
+app.get('/bot/message/quota', (req, res) => {
+    res.send({ type: 'limited', value: 335000 })
+});
+
+// プロフィール情報を取得する
+// https://developers.line.biz/ja/reference/messaging-api/#get-profile
+app.get('/bot/profile/:userId', (req, res) => {
+    res.send({
+        "displayName": faker.internet.userName(),
+        "userId":req.params.userId,
+        "language":"js",
+        "pictureUrl":faker.image.imageUrl(),
+        "statusMessage": faker.lorem.text()
     });
 });
 
-//#region Behave as LINE Platform
-const lineAPIUrl = "https://api.line.me/v2/";
-
 // Receive request from your bot application.
 app.all('/*', function (req, res) {
+    console.log(`${req.method}: ${req.url}`);
+
     var url = req.url;
     // reply, push and multicast will be simply pass to UI.
     if (url.indexOf('reply') > -1 || url.indexOf('push') > -1 || url.indexOf('multicast') > -1) {
         io.emit('reply', req.body);
         res.status(200).send({});
     }
-    // if it request content
+
     else if (url.indexOf('content') > -1 && req.method.toLowerCase() == 'get') {
         // The actual file sit in public\temp. Returns the file with messageId
         let messageId = url.slice(url.indexOf('message') + 8, url.indexOf('content') - 1);
         var files = fs.readdirSync(path.join(__dirname, 'public', 'temp', messageId));
         res.sendFile(path.join(__dirname, 'public', 'temp', messageId, files[0]));
     }
-    else {
-        handleRequest(req, res);
-    }
 });
-
-// Handle all request by add LINE Platform Url.
-function handleRequest(req, res) {
-    // remove host header
-    delete req.headers['host'];
-    delete req.headers['content-length'];
-    // Craft URL for LINE Platform.
-    var url = req.url;
-    if (url.indexOf('oauth') > -1) {
-        url = url.slice(url.indexOf('oauth'), url.length);
-    }
-    else if (url.indexOf('bot') > -1) {
-        url = url.slice(url.indexOf('bot'), url.length);
-    }
-    var options = {
-        headers: req.headers,
-        uri: `${lineAPIUrl}${url}`,
-        method: req.method
-    };
-    if (req.body && req.body instanceof Buffer) {
-        Object.assign(options, { body: req.body })
-    }
-    else if (req.body && req.body instanceof Object) {
-        Object.assign(options, { json: req.body })
-    }
-    request(options,
-        function (error, response, body) {
-            if (error) console.error(error);
-            res.status(response.statusCode).send(body);
-        }
-    );
-}
 
 //#endregion
 /* Start the service */

@@ -11,6 +11,7 @@
 		"body-parser": "^1.18.2",
 		"connect-multiparty": "^2.1.0",
 		"express": "^4.15.2",
+		"faker": "^5.5.3",
 		"request": "^2.83.0",
 		"shelljs": "^0.7.8",
 		"socket.io": "^2.0.4"
@@ -20,6 +21,7 @@
 		"Bot"
 	],
 	"scripts": {
+		"startDev": "nodemon node app.js",
 		"start": "start http://localhost:8080 && node app.js",
 		"startMac": "open http://localhost:8080 && node app.js",
 		"startLinux": "xdg-open http://localhost:8080 && node app.js"
@@ -33,5 +35,8 @@
 	"bugs": {
 		"url": "https://github.com/kenakamu/LINESimulator/issues"
 	},
-	"license": "MIT"
+	"license": "MIT",
+	"devDependencies": {
+		"nodemon": "^2.0.12"
+	}
 }

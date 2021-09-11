@@ -5,6 +5,6 @@ WORKDIR /app/
 COPY . .
 
 EXPOSE 8080
-RUN npm install
+RUN yarn install
 
 CMD [ "node", "app.js" ]
