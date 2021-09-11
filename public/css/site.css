@@ -297,6 +297,9 @@ body{
     width: var(--chat-template-buttons-width);
     margin: 0 0 20px 10px;
 }
+.chat-template-buttons-button:hover, .fa {
+    cursor: pointer;
+}
 .chat-template-buttons-image {
     background-size: 100%;
     background-repeat: no-repeat;

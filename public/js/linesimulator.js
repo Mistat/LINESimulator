@@ -142,28 +142,23 @@ function setSettings() {
 
 // Handle Chat Item select event.
 function onSelectChatItem(obj) {
-  if (pocMode) {
-    $('.chat-item-tool').remove();
-    $(obj).after(`<li tabindex="1" class="chat-item-tool active-li">
-        <div>
-          <i class="fa fa-trash-o fa-inverse fa-2x" onclick="removeChatItem(this);"></i>
-          <i class="fa fa-arrow-up fa-inverse fa-2x" onclick="moveItem(this, true)"></i>
-          <i class="fa fa-arrow-down fa-inverse fa-2x" onclick="moveItem(this, false)"></i>
-          <i class="fa fa-times fa-inverse fa-2x right" onclick="{$('.chat-item-tool').remove();}"></i>
-        </div> 
-      </li>`);
-    if (obj.hasClass('chat-user')) {
-      $('.chat-item-tool').addClass('chat-user');
-    }
-    $('.chat-item-tool')[0].focus();
+  $('.chat-item-tool').remove();
+  $(obj).after(`<li tabindex="1" class="chat-item-tool active-li">
+      <div>
+        <i class="fa fa-trash-o fa-inverse fa-2x" onclick="removeChatItem(this);"></i>
+        <i class="fa fa-arrow-up fa-inverse fa-2x" onclick="moveItem(this, true)"></i>
+        <i class="fa fa-arrow-down fa-inverse fa-2x" onclick="moveItem(this, false)"></i>
+        <i class="fa fa-times fa-inverse fa-2x right" onclick="{$('.chat-item-tool').remove();}"></i>
+      </div> 
+    </li>`);
+  if (obj.hasClass('chat-user')) {
+    $('.chat-item-tool').addClass('chat-user');
   }
-  // Display RowData
-  else {
-    $('.chat-raw').children('pre')[0].innerText = JSON.stringify(
-      JSON.parse($(obj).attr('data')), null, '\t');
-    if ($('.chat-raw').hasClass("hide")) {
-      $('.chat-raw').removeClass("hide");
-    }
+  $('.chat-item-tool')[0].focus();
+  $('.chat-raw').children('pre')[0].innerText = JSON.stringify(
+    JSON.parse($(obj).attr('data')), null, '\t');
+  if ($('.chat-raw').hasClass("hide")) {
+    $('.chat-raw').removeClass("hide");
   }
 }
 
